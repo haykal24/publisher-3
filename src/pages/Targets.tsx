@@ -2,26 +2,21 @@ import { Target, TrendingUp, Calendar } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
+import { useAppData } from '@/contexts/AppDataContext';
 
 export default function Targets() {
+  const analytics = useRealTimeAnalytics();
+  const { yearlyTargets, currentYear } = useAppData();
   const [monthFilter, setMonthFilter] = useState('08');
   const [yearFilter, setYearFilter] = useState('2024');
-
-  const monthlyData = [
-    { month: 'Jan', completed: 8, target: 10 },
-    { month: 'Feb', completed: 9, target: 10 },
-    { month: 'Mar', completed: 7, target: 10 },
-    { month: 'Apr', completed: 10, target: 10 },
-    { month: 'Mei', completed: 8, target: 10 },
-    { month: 'Jun', completed: 9, target: 10 },
-    { month: 'Jul', completed: 10, target: 10 },
-    { month: 'Agu', completed: 6, target: 10 },
-    { month: 'Sep', completed: 0, target: 10 },
-    { month: 'Okt', completed: 0, target: 10 },
-    { month: 'Nov', completed: 0, target: 10 },
-    { month: 'Des', completed: 0, target: 10 },
-  ];
+  
+  // Calculate KPIs from real-time data
+  const currentYearTarget = yearlyTargets.find(t => t.year === currentYear)?.target || 0;
+  const completedThisYear = analytics.completedBooks;
+  const progressPercentage = currentYearTarget > 0 ? Math.round((completedThisYear / currentYearTarget) * 100) : 0;
+  const averageBooksPerMonth = analytics.monthlyProgress.reduce((sum, month) => sum + month.completed, 0) / 12;
 
   return (
     <div className="p-6 space-y-6">
@@ -56,28 +51,28 @@ export default function Targets() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard
           title="Progres Tahunan"
-          value={67}
+          value={progressPercentage}
           subtitle="% dari target"
           variant="success"
           icon={<Target className="w-8 h-8" />}
         />
         <KPICard
           title="Pencapaian vs Target (YTD)"
-          value={80}
-          subtitle="dari 120 target"
+          value={completedThisYear}
+          subtitle={`dari ${currentYearTarget} target`}
           variant="accent"
           icon={<TrendingUp className="w-8 h-8" />}
         />
         <KPICard
           title="Rata-rata Buku/Bulan"
-          value={10}
+          value={Math.round(averageBooksPerMonth)}
           subtitle="realisasi"
           variant="default"
           icon={<Calendar className="w-8 h-8" />}
         />
       </div>
 
-      <ProgressChart data={monthlyData} />
+      <ProgressChart showLastMonths={12} />
     </div>
   );
 }

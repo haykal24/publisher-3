@@ -5,9 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useMemo } from 'react';
 import { useAppData } from '@/contexts/AppDataContext';
+import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
+import { useTeamMembers } from '@/hooks/useSupabaseData';
 
 export default function Analytics() {
   const { books } = useAppData();
+  const realTimeAnalytics = useRealTimeAnalytics();
+  const { teamMembers } = useTeamMembers();
   const [monthFilter, setMonthFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
 
@@ -35,8 +39,8 @@ export default function Analytics() {
     });
   }, [books, monthFilter, yearFilter]);
 
-  // Calculate analytics based on filtered books
-  const analytics = useMemo(() => {
+  // Calculate filtered analytics based on selected month and year
+  const filteredAnalytics = useMemo(() => {
     const publishedBooks = filteredBooks.filter(book => book.status === 'Done').length;
     const booksInProcess = filteredBooks.filter(book => book.status === 'In Progress').length;
     const lateBooks = filteredBooks.filter(book => book.daysLeft < 0).length;
@@ -126,42 +130,42 @@ export default function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <KPICard
           title="Rata-rata Waktu Produksi"
-          value={65}
+          value={realTimeAnalytics.averageCompletionTime}
           subtitle="hari"
           variant="default"
           icon={<Clock className="w-8 h-8" />}
         />
         <KPICard
           title="Produksi Tercepat"
-          value={42}
+          value={realTimeAnalytics.fastestCompletion}
           subtitle="hari"
           variant="success"
           icon={<TrendingUp className="w-8 h-8" />}
         />
         <KPICard
           title="Produksi Terlama"
-          value={89}
+          value={realTimeAnalytics.slowestCompletion}
           subtitle="hari"
           variant="warning"
           icon={<AlertTriangle className="w-8 h-8" />}
         />
         <KPICard
           title="Buku Diterbitkan"
-          value={analytics.publishedBooks}
+          value={realTimeAnalytics.completedBooks}
           subtitle="periode ini"
           variant="success"
           icon={<CheckCircle className="w-8 h-8" />}
         />
         <KPICard
           title="Buku Diproses"
-          value={analytics.booksInProcess}
+          value={realTimeAnalytics.booksInProgress}
           subtitle="aktif"
           variant="accent"
           icon={<BarChart />}
         />
         <KPICard
           title="Tingkat Keterlambatan"
-          value={analytics.delayPercentage}
+          value={filteredAnalytics.delayPercentage}
           subtitle="persen"
           variant="default"
           icon={<AlertTriangle className="w-8 h-8" />}

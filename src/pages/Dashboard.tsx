@@ -9,12 +9,13 @@ import { BookDetailModal } from '@/components/dashboard/BookDetailModal';
 import { StatusChart } from '@/components/dashboard/StatusChart';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { DeadlineList } from '@/components/dashboard/DeadlineList';
-import { sampleBooks, chartData } from '@/data/sampleData';
 import { useAppData } from '@/contexts/AppDataContext';
+import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
 import { Book } from '@/types';
 
 export default function Dashboard() {
-  const { books, kpiData } = useAppData();
+  const { books, kpiData, yearlyTargets, monthlyTargets, currentYear } = useAppData();
+  const analytics = useRealTimeAnalytics();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [publisherFilter, setPublisherFilter] = useState('all');
@@ -147,35 +148,35 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           title="Target Tahun Ini"
-          value={kpiData.yearTarget}
+          value={yearlyTargets.find(t => t.year === currentYear)?.target || 0}
           subtitle="judul buku"
           variant="default"
           icon={<Target className="w-8 h-8" />}
         />
         <KPICard
           title="Target Bulan Ini"
-          value={kpiData.monthTarget}
+          value={monthlyTargets[currentYear]?.[new Date().toLocaleDateString('id-ID', { month: 'short' })] || 0}
           subtitle="judul buku"
           variant="accent"
           icon={<BookOpen className="w-8 h-8" />}
         />
         <KPICard
           title="Sedang Dikerjakan"
-          value={kpiData.inProgress}
+          value={analytics.booksInProgress}
           subtitle="buku aktif"
           variant="default"
           icon={<Clock className="w-8 h-8" />}
         />
         <KPICard
           title="Selesai"
-          value={kpiData.completed}
+          value={analytics.completedBooks}
           subtitle="buku terbit"
           variant="success"
           icon={<CheckCircle className="w-8 h-8" />}
         />
         <KPICard
           title="Mendekati Deadline"
-          value={kpiData.nearDeadline}
+          value={analytics.booksNearDeadline}
           subtitle="< 7 hari"
           variant="warning"
           icon={<AlertTriangle className="w-8 h-8" />}
@@ -185,7 +186,7 @@ export default function Dashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <StatusChart />
-        <ProgressChart data={chartData.monthlyProgress} />
+        <ProgressChart />
         <DeadlineList books={books} />
       </div>
 
