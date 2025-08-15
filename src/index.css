@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design System for Book Publishing Management
+All colors, gradients, fonts, and animations defined here
+*/
+
+@layer base {
+  :root {
+    /* Base Colors */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 18%;
+
+    /* Surface Colors */
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    /* Brand Colors - Professional Publishing Theme */
+    --primary: 215 84% 42%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 215 84% 52%;
+    --primary-dark: 215 84% 32%;
+
+    /* Secondary Colors */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 13% 18%;
+
+    /* Accent Colors */
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 98%;
+    --accent-light: 38 92% 60%;
+
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --success-light: 142 69% 58%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    --warning-light: 38 92% 60%;
+
+    --error: 0 84% 60%;
+    --error-foreground: 0 0% 98%;
+    --error-light: 0 84% 70%;
+
+    /* Neutral Colors */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 84% 42%;
+
+    /* Sidebar */
+    --sidebar-background: 220 27% 98%;
+    --sidebar-foreground: 220 13% 18%;
+    --sidebar-primary: 215 84% 42%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 215 84% 96%;
+    --sidebar-accent-foreground: 215 84% 42%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 215 84% 42%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 84% 42%), hsl(215 84% 52%));
+    --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 60%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 69% 58%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 13% 18% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 13% 18% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 13% 18% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(220 13% 18% / 0.1);
+    --shadow-primary: 0 10px 30px -10px hsl(215 84% 42% / 0.3);
+    --shadow-accent: 0 10px 30px -10px hsl(38 92% 50% / 0.3);
+
+    /* Border Radius */
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1rem;
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    --background: 220 27% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 27% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 27% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 215 84% 52%;
+    --primary-foreground: 220 27% 8%;
+    --primary-light: 215 84% 62%;
+    --primary-dark: 215 84% 42%;
+
+    --secondary: 220 27% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 27% 15%;
+    --muted-foreground: 215 20% 65%;
+    --border: 220 27% 20%;
+    --input: 220 27% 20%;
+    --ring: 215 84% 52%;
+
+    --sidebar-background: 220 27% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 215 84% 52%;
+    --sidebar-primary-foreground: 220 27% 8%;
+    --sidebar-accent: 220 27% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 27% 20%;
+    --sidebar-ring: 215 84% 52%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(215 84% 52%), hsl(215 84% 62%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 27% 8%), hsl(220 27% 12%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
