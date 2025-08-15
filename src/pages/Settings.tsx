@@ -113,7 +113,12 @@ export default function SettingsPage() {
   };
 
   const handleSavePublishingTargets = async () => {
-    await updateSetting('publishing_targets', settings.publishingTargets);
+    try {
+      await updateSetting('publishing_targets', settings.publishingTargets);
+      toast.success('Target publikasi berhasil disimpan dan disinkronkan');
+    } catch (error) {
+      toast.error('Gagal menyimpan target publikasi');
+    }
   };
 
   const handleSaveAcquisitionTargets = async () => {
