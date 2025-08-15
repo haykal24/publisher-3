@@ -44,7 +44,7 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
   };
 
   const createDefaultTasks = (book: Book): Task[] => {
-    // Default production tasks based on the image you showed
+    // Complete production task list as specified
     const defaultTaskNames = [
       'Cover Design',
       'Pengantar & Endors',
@@ -53,7 +53,16 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
       'Layout',
       'Desain Peta Buku',
       'Print & Proofread Awal',
-      'QC Isi & ACC Kover Final'
+      'QC Isi & ACC Kover Final',
+      'Finishing Produksi',
+      'SPH',
+      'PK Final',
+      'Cetak Awal Dummy',
+      'Proofread Akhir',
+      'Input Akhir',
+      'Cetak Dummy Digital Printing (opsional)',
+      'Naik Cetak',
+      'Turun Cetak'
     ];
 
     return defaultTaskNames.map((taskName, index) => ({
