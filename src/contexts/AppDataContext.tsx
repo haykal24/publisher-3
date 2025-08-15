@@ -46,29 +46,36 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [targets]);
 
   const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'short' });
+  const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'long' });
 
   // Calculate KPI data based on current books and targets
   const calculateKPIData = (): KPIData => {
     const currentYearTarget = yearlyTargets.find(t => t.year === currentYear)?.target || 0;
-    const currentMonthTarget = monthlyTargets[currentYear]?.[currentMonth] || 0;
+    
+    // Find current month target from monthly targets using Indonesian month names
+    const monthMapping: Record<string, string> = {
+      'Januari': 'Januari', 'Februari': 'Februari', 'Maret': 'Maret', 'April': 'April',
+      'Mei': 'Mei', 'Juni': 'Juni', 'Juli': 'Juli', 'Agustus': 'Agustus',
+      'September': 'September', 'Oktober': 'Oktober', 'November': 'November', 'Desember': 'Desember'
+    };
+    
+    const currentMonthTarget = monthlyTargets[currentYear]?.[monthMapping[currentMonth]] || 0;
 
-    // Books in progress
+    // Books in progress - count all books with status "In Progress"
     const inProgress = books.filter(book => book.status === 'In Progress').length;
 
-    // Completed books this year
-    const completed = books.filter(book => {
-      const bookYear = new Date(book.createdAt).getFullYear();
-      return book.status === 'Done' && bookYear === currentYear;
-    }).length;
+    // Completed books - count all books with status "Done"
+    const completed = books.filter(book => book.status === 'Done').length;
 
-    // Books near deadline (within 7 days)
+    // Books near deadline (within 7 days) - calculate based on deadline field
     const today = new Date();
     const nearDeadline = books.filter(book => {
+      if (book.status === 'Done') return false;
+      
       const deadline = new Date(book.deadline);
       const diffTime = deadline.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7 && diffDays >= 0 && book.status !== 'Done';
+      return diffDays <= 7 && diffDays >= 0;
     }).length;
 
     return {

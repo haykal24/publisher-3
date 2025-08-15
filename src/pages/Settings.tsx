@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { useSettings } from '@/hooks/useSettings';
+import { targetsService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -123,9 +124,12 @@ export default function SettingsPage() {
         const monthlyData = yearData.monthly as Record<string, number>;
         const annualTarget = Object.values(monthlyData).reduce((sum, target) => sum + target, 0);
         
-        // Update or create target in targets table via targetsService
-        // Note: This requires updating the useSettings hook to support targets table
-        console.log('Saving target for year:', yearNum, 'with data:', { annualTarget, monthlyTargets: monthlyData });
+        // Save to targets table for Dashboard sync
+        await targetsService.create({
+          year: yearNum,
+          annualTarget,
+          monthlyTargets: monthlyData
+        });
       }
       
       toast.success('Target publikasi berhasil disimpan dan disinkronkan dengan Dashboard');
