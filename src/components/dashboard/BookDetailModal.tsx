@@ -222,7 +222,16 @@ export function BookDetailModal({
                             <Button size="sm" variant="ghost" onClick={() => handleEditTask(task)} className="h-8 w-8 p-0">
                               <Edit className="w-4 h-4" />
                             </Button>
-                            {onDeleteTask}
+                            {onDeleteTask && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => onDeleteTask(task.id)} 
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>}
                       </TableCell>
                     </TableRow>)}

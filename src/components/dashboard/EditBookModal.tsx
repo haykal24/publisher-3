@@ -8,8 +8,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Book } from '@/types';
-import { sampleTeamMembers } from '@/data/sampleData';
 import { toast } from 'sonner';
+import { useTeamMembers } from '@/hooks/useSupabaseData';
 
 interface EditBookModalProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ interface BookFormData {
 }
 
 export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookModalProps) {
+  const { teamMembers } = useTeamMembers();
   const form = useForm<BookFormData>({
     defaultValues: {
       title: '',
@@ -192,7 +193,7 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background border z-50">
-                        {sampleTeamMembers.map((member) => (
+                        {teamMembers.map((member) => (
                           <SelectItem key={member.id} value={member.name}>
                             {member.name} - {member.role}
                           </SelectItem>
@@ -319,7 +320,7 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-background border z-50">
-                              {sampleTeamMembers.map((member) => (
+                              {teamMembers.map((member) => (
                                 <SelectItem key={member.id} value={member.name}>
                                   {member.name}
                                 </SelectItem>
