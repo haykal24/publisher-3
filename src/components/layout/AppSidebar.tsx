@@ -47,7 +47,7 @@ const managementMenuItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const { profile, signOut } = useAuth();
-  const { canAccessMenu } = useRoleAccess();
+  const { canAccessMenu, isManager } = useRoleAccess();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
@@ -64,12 +64,12 @@ export function AppSidebar() {
         : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
-  // Filter menu items based on user role
-  const filteredMainMenuItems = mainMenuItems.filter(item => 
+  // Filter menu items based on user role - but Managers see everything
+  const filteredMainMenuItems = isManager ? mainMenuItems : mainMenuItems.filter(item => 
     canAccessMenu(item.title)
   );
 
-  const filteredManagementMenuItems = managementMenuItems.filter(item => 
+  const filteredManagementMenuItems = isManager ? managementMenuItems : managementMenuItems.filter(item => 
     canAccessMenu(item.title)
   );
 

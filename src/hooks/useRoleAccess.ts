@@ -26,7 +26,7 @@ export function useRoleAccess(): RoleAccess {
     const userPublisher = publisherRoles.includes(role) ? role : null;
 
     const canAccessMenu = (menuItem: string): boolean => {
-      // Manager can access everything
+      // Manager can access everything - no restrictions
       if (isManager) return true;
       
       // Production cannot access Team and Settings
