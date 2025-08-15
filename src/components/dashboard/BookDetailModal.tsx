@@ -94,7 +94,7 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{book.title}</DialogTitle>
         </DialogHeader>
@@ -141,7 +141,8 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
           {/* Tasks Table */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Daftar Tugas Produksi</h3>
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-lg overflow-x-auto">
+              <div className="min-w-[800px]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -277,6 +278,7 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           </div>
         </div>
