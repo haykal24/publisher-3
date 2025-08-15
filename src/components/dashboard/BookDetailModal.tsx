@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import { useSettings } from '@/hooks/useSettings';
 import { tasksService } from '@/services/supabaseService';
 import { toast } from 'sonner';
-
 interface BookDetailModalProps {
   book: Book | null;
   isOpen: boolean;
@@ -21,8 +20,13 @@ interface BookDetailModalProps {
   onEditTask?: (taskId: string, updatedTask: Partial<Task>) => void;
   onDeleteTask?: (taskId: string) => void;
 }
-
-export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTask }: BookDetailModalProps) {
+export function BookDetailModal({
+  book,
+  isOpen,
+  onClose,
+  onEditTask,
+  onDeleteTask
+}: BookDetailModalProps) {
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editingTaskData, setEditingTaskData] = useState<Partial<Task>>({});
   const [bookTasks, setBookTasks] = useState<Task[]>([]);
@@ -35,36 +39,15 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
       setBookTasks(tasks);
     }
   }, [book, isOpen]);
-
   const calculateDaysLeft = (deadline: string): number => {
     const today = new Date();
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-
   const createDefaultTasks = (book: Book): Task[] => {
     // Complete production task list as specified
-    const defaultTaskNames = [
-      'Cover Design',
-      'Pengantar & Endors',
-      'Editing Naskah', 
-      'Draf PK & Peta Buku',
-      'Layout',
-      'Desain Peta Buku',
-      'Print & Proofread Awal',
-      'QC Isi & ACC Kover Final',
-      'Finishing Produksi',
-      'SPH',
-      'PK Final',
-      'Cetak Awal Dummy',
-      'Proofread Akhir',
-      'Input Akhir',
-      'Cetak Dummy Digital Printing (opsional)',
-      'Naik Cetak',
-      'Turun Cetak'
-    ];
-
+    const defaultTaskNames = ['Cover Design', 'Pengantar & Endors', 'Editing Naskah', 'Draf PK & Peta Buku', 'Layout', 'Desain Peta Buku', 'Print & Proofread Awal', 'QC Isi & ACC Kover Final', 'Finishing Produksi', 'SPH', 'PK Final', 'Cetak Awal Dummy', 'Proofread Akhir', 'Input Akhir', 'Cetak Dummy Digital Printing (opsional)', 'Naik Cetak', 'Turun Cetak'];
     return defaultTaskNames.map((taskName, index) => ({
       id: `${book.id}-task-${index}`,
       name: taskName,
@@ -75,9 +58,7 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
       status: 'Not Started' as const
     }));
   };
-
   if (!book) return null;
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Done':
@@ -88,7 +69,6 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
         return 'bg-muted text-muted-foreground';
     }
   };
-
   const getPublisherColor = (publisher: string) => {
     const colors = {
       'Renebook': 'bg-primary/10 text-primary border-primary/20',
@@ -99,14 +79,11 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
     };
     return colors[publisher as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
-
   const getDaysLeftColor = (daysLeft: number) => {
     if (daysLeft < 0) return 'text-error';
     if (daysLeft <= 7) return 'text-warning';
     return 'text-success';
   };
-
-
   const handleEditTask = (task: Task) => {
     setEditingTask(task.id);
     setEditingTaskData({
@@ -117,7 +94,6 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
       notes: task.notes
     });
   };
-
   const handleSaveTask = (taskId: string) => {
     if (onEditTask && editingTaskData.deadline) {
       const updatedTask = {
@@ -129,18 +105,17 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
     setEditingTask(null);
     setEditingTaskData({});
   };
-
   const handleCancelEdit = () => {
     setEditingTask(null);
     setEditingTaskData({});
   };
-
   const updateTaskField = (field: keyof Task, value: string) => {
-    setEditingTaskData(prev => ({ ...prev, [field]: value }));
+    setEditingTaskData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+  return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{book.title}</DialogTitle>
@@ -203,67 +178,26 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bookTasks.map((task) => (
-                    <TableRow key={task.id}>
+                  {bookTasks.map(task => <TableRow key={task.id}>
                       <TableCell className="font-medium">
-                        {editingTask === task.id ? (
-                          <Input
-                            value={editingTaskData.name || ''}
-                            onChange={(e) => updateTaskField('name', e.target.value)}
-                            className="min-w-[150px]"
-                          />
-                        ) : (
-                          task.name
-                        )}
+                        {editingTask === task.id ? <Input value={editingTaskData.name || ''} onChange={e => updateTaskField('name', e.target.value)} className="min-w-[150px]" /> : task.name}
                       </TableCell>
                       <TableCell>
-                        {editingTask === task.id ? (
-                          <Input
-                            value={editingTaskData.pic || ''}
-                            onChange={(e) => updateTaskField('pic', e.target.value)}
-                            className="min-w-[100px]"
-                          />
-                        ) : (
-                          task.pic
-                        )}
+                        {editingTask === task.id ? <Input value={editingTaskData.pic || ''} onChange={e => updateTaskField('pic', e.target.value)} className="min-w-[100px]" /> : task.pic}
                       </TableCell>
                       <TableCell>
-                        {editingTask === task.id ? (
-                          <Input
-                            type="date"
-                            value={editingTaskData.deadline || ''}
-                            onChange={(e) => updateTaskField('deadline', e.target.value)}
-                            className="min-w-[150px]"
-                          />
-                        ) : (
-                          new Date(task.deadline).toLocaleDateString('id-ID')
-                        )}
+                        {editingTask === task.id ? <Input type="date" value={editingTaskData.deadline || ''} onChange={e => updateTaskField('deadline', e.target.value)} className="min-w-[150px]" /> : new Date(task.deadline).toLocaleDateString('id-ID')}
                       </TableCell>
                       <TableCell>
                         <span className={cn("text-sm", getDaysLeftColor(task.daysLeft))}>
-                          {task.daysLeft > 0 ? `${task.daysLeft} hari` : 
-                           task.daysLeft === 0 ? 'Hari ini' : 
-                           `Terlambat ${Math.abs(task.daysLeft)} hari`}
+                          {task.daysLeft > 0 ? `${task.daysLeft} hari` : task.daysLeft === 0 ? 'Hari ini' : `Terlambat ${Math.abs(task.daysLeft)} hari`}
                         </span>
                       </TableCell>
                       <TableCell>
-                        {editingTask === task.id ? (
-                          <Textarea
-                            value={editingTaskData.notes || ''}
-                            onChange={(e) => updateTaskField('notes', e.target.value)}
-                            className="min-h-[60px] min-w-[150px]"
-                            placeholder="Tambahkan catatan..."
-                          />
-                        ) : (
-                          <span className="text-sm">{task.notes || '-'}</span>
-                        )}
+                        {editingTask === task.id ? <Textarea value={editingTaskData.notes || ''} onChange={e => updateTaskField('notes', e.target.value)} className="min-h-[60px] min-w-[150px]" placeholder="Tambahkan catatan..." /> : <span className="text-sm">{task.notes || '-'}</span>}
                       </TableCell>
                       <TableCell>
-                        {editingTask === task.id ? (
-                          <Select 
-                            value={editingTaskData.status || ''} 
-                            onValueChange={(value) => updateTaskField('status', value)}
-                          >
+                        {editingTask === task.id ? <Select value={editingTaskData.status || ''} onValueChange={value => updateTaskField('status', value)}>
                             <SelectTrigger className="min-w-[120px]">
                               <SelectValue />
                             </SelectTrigger>
@@ -272,57 +206,26 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
                               <SelectItem value="In Progress">In Progress</SelectItem>
                               <SelectItem value="Done">Done</SelectItem>
                             </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge className={cn("text-xs", getStatusColor(task.status))}>
+                          </Select> : <Badge className={cn("text-xs", getStatusColor(task.status))}>
                             {task.status}
-                          </Badge>
-                        )}
+                          </Badge>}
                       </TableCell>
                       <TableCell>
-                        {editingTask === task.id ? (
-                          <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleSaveTask(task.id)}
-                              className="h-8 px-3"
-                            >
+                        {editingTask === task.id ? <div className="flex gap-1">
+                            <Button size="sm" onClick={() => handleSaveTask(task.id)} className="h-8 px-3">
                               Simpan
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={handleCancelEdit}
-                              className="h-8 px-3"
-                            >
+                            <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-8 px-3">
                               Batal
                             </Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditTask(task)}
-                              className="h-8 w-8 p-0"
-                            >
+                          </div> : <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => handleEditTask(task)} className="h-8 w-8 p-0">
                               <Edit className="w-4 h-4" />
                             </Button>
-                            {onDeleteTask && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => onDeleteTask(task.id)}
-                                className="h-8 w-8 p-0 text-error hover:bg-error/10"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                            {onDeleteTask}
+                          </div>}
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
               </div>
@@ -330,6 +233,5 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
