@@ -14,7 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string | null
+          completed_tasks: number
+          created_at: string
+          days_left: number | null
+          deadline: string
+          id: string
+          pic: string
+          progress: number
+          publisher: string
+          status: string
+          title: string
+          total_tasks: number
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          completed_tasks?: number
+          created_at?: string
+          days_left?: number | null
+          deadline: string
+          id?: string
+          pic: string
+          progress?: number
+          publisher: string
+          status?: string
+          title: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          completed_tasks?: number
+          created_at?: string
+          days_left?: number | null
+          deadline?: string
+          id?: string
+          pic?: string
+          progress?: number
+          publisher?: string
+          status?: string
+          title?: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          date: string
+          id: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          status: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manuscripts: {
+        Row: {
+          author: string
+          created_at: string
+          date_received: string
+          genre: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          date_received: string
+          genre: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          date_received?: string
+          genre?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      targets: {
+        Row: {
+          annual_target: number
+          created_at: string
+          id: string
+          monthly_targets: Json
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          annual_target: number
+          created_at?: string
+          id?: string
+          monthly_targets?: Json
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          annual_target?: number
+          created_at?: string
+          id?: string
+          monthly_targets?: Json
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          days_left: number | null
+          deadline: string
+          id: string
+          name: string
+          notes: string | null
+          pic: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          days_left?: number | null
+          deadline: string
+          id?: string
+          name: string
+          notes?: string | null
+          pic: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          days_left?: number | null
+          deadline?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          pic?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          avatar: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          avatar?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -4,42 +4,48 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { sampleTeamMembers } from '@/data/sampleData';
 import { AddTeamMemberModal } from '@/components/team/AddTeamMemberModal';
 import { EditTeamMemberModal } from '@/components/team/EditTeamMemberModal';
 import { DeleteTeamMemberDialog } from '@/components/team/DeleteTeamMemberDialog';
 import { TeamMember } from '@/types';
-import { toast } from 'sonner';
+import { useTeamMembers } from '@/hooks/useSupabaseData';
+
 export default function Team() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(sampleTeamMembers);
+  const { teamMembers, loading, addTeamMember, updateTeamMember, deleteTeamMember } = useTeamMembers();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null);
-  const handleAddMember = (newMember: TeamMember) => {
-    setTeamMembers(prev => [...prev, newMember]);
+
+  const handleAddMember = async (newMember: TeamMember) => {
+    await addTeamMember(newMember);
+    setIsAddModalOpen(false);
   };
+
   const handleEditMember = (member: TeamMember) => {
     setEditingMember(member);
     setIsEditModalOpen(true);
   };
-  const handleUpdateMember = (updatedMember: TeamMember) => {
-    setTeamMembers(prev => prev.map(member => member.id === updatedMember.id ? updatedMember : member));
+
+  const handleUpdateMember = async (updatedMember: TeamMember) => {
+    await updateTeamMember(updatedMember.id, updatedMember);
     setIsEditModalOpen(false);
     setEditingMember(null);
   };
+
   const handleDeleteMember = (member: TeamMember) => {
     setDeletingMember(member);
     setIsDeleteDialogOpen(true);
   };
-  const confirmDeleteMember = () => {
+
+  const confirmDeleteMember = async () => {
     if (!deletingMember) return;
-    setTeamMembers(prev => prev.filter(member => member.id !== deletingMember.id));
-    toast.success(`${deletingMember.name} berhasil dihapus dari tim`);
+    await deleteTeamMember(deletingMember.id);
     setIsDeleteDialogOpen(false);
     setDeletingMember(null);
   };
+
   const getRoleColor = (role: string) => {
     const colors = {
       'Manajer': 'bg-primary/10 text-primary border-primary/20',
@@ -52,7 +58,19 @@ export default function Team() {
     };
     return colors[role as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
   };
-  return <div className="p-6 space-y-6">
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Memuat data tim...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manajemen Tim</h1>
@@ -65,7 +83,8 @@ export default function Team() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {teamMembers.map(member => <Card key={member.id} className="hover:shadow-lg transition-shadow">
+        {teamMembers.map(member => (
+          <Card key={member.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="text-center pb-3">
               <Avatar className="w-16 h-16 mx-auto mb-3">
                 <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg font-semibold">
@@ -82,10 +101,6 @@ export default function Team() {
                 <Mail className="w-4 h-4" />
                 <span>{member.email}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                
-                
-              </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEditMember(member)}>
                   Edit
@@ -95,19 +110,35 @@ export default function Team() {
                 </Button>
               </div>
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
-      <AddTeamMemberModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAddMember={handleAddMember} />
+      <AddTeamMemberModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAddMember={handleAddMember} 
+      />
 
-      <EditTeamMemberModal isOpen={isEditModalOpen} onClose={() => {
-      setIsEditModalOpen(false);
-      setEditingMember(null);
-    }} onUpdateMember={handleUpdateMember} member={editingMember} />
+      <EditTeamMemberModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingMember(null);
+        }} 
+        onUpdateMember={handleUpdateMember} 
+        member={editingMember} 
+      />
 
-      <DeleteTeamMemberDialog isOpen={isDeleteDialogOpen} onClose={() => {
-      setIsDeleteDialogOpen(false);
-      setDeletingMember(null);
-    }} onConfirm={confirmDeleteMember} member={deletingMember} />
-    </div>;
+      <DeleteTeamMemberDialog 
+        isOpen={isDeleteDialogOpen} 
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingMember(null);
+        }} 
+        onConfirm={confirmDeleteMember} 
+        member={deletingMember} 
+      />
+    </div>
+  );
 }
