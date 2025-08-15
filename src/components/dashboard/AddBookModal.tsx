@@ -9,7 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Book, Task } from '@/types';
-import { defaultTasks, sampleTeamMembers } from '@/data/sampleData';
+import { defaultTasks } from '@/data/sampleData';
+import { useTeamMembers } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
 
 interface AddBookModalProps {
@@ -36,6 +37,7 @@ interface BookFormData {
 }
 
 export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) {
+  const { teamMembers } = useTeamMembers();
   const form = useForm<BookFormData>({
     defaultValues: {
       title: '',
@@ -150,7 +152,7 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background border z-50">
-                        {sampleTeamMembers.map((member) => (
+                        {teamMembers.map((member) => (
                           <SelectItem key={member.id} value={member.name}>
                             {member.name} - {member.role}
                           </SelectItem>
@@ -277,7 +279,7 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-background border z-50">
-                              {sampleTeamMembers.map((member) => (
+                              {teamMembers.map((member) => (
                                 <SelectItem key={member.id} value={member.name}>
                                   {member.name}
                                 </SelectItem>
