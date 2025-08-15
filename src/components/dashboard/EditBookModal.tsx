@@ -54,9 +54,45 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
     name: "tasks"
   });
 
+  // Complete list of production tasks
+  const getAllProductionTasks = () => [
+    'Cover Design',
+    'Pengantar & Endors',
+    'Editing Naskah',
+    'Draf PK & Peta Buku',
+    'Layout',
+    'Desain Peta Buku',
+    'Print & Proofread Awal',
+    'QC Isi & ACC Kover Final',
+    'Finishing Produksi',
+    'SPH',
+    'PK Final',
+    'Cetak Awal Dummy',
+    'Proofread Akhir',
+    'Input Akhir',
+    'Cetak Dummy Digital Printing (opsional)',
+    'Naik Cetak',
+    'Turun Cetak'
+  ];
+
   // Populate form when book changes
   useEffect(() => {
     if (book) {
+      const allTaskNames = getAllProductionTasks();
+      
+      // Create complete task list - use existing tasks or create defaults
+      const completeTasks = allTaskNames.map((taskName, index) => {
+        const existingTask = book.tasks.find(task => task.name === taskName);
+        
+        return {
+          name: taskName,
+          pic: existingTask?.pic || book.pic,
+          deadline: existingTask?.deadline || book.deadline,
+          notes: existingTask?.notes || 'Catatan...',
+          status: existingTask?.status || 'Not Started' as const
+        };
+      });
+
       form.reset({
         title: book.title,
         author: book.author || '',
@@ -65,13 +101,7 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
         deadline: book.deadline,
         status: book.status,
         notes: '',
-        tasks: book.tasks.map(task => ({
-          name: task.name,
-          pic: task.pic,
-          deadline: task.deadline,
-          notes: task.notes,
-          status: task.status
-        }))
+        tasks: completeTasks
       });
     }
   }, [book, form]);
