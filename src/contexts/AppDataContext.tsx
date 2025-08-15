@@ -24,23 +24,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const { targets } = useTargets();
   
   // Transform targets data to match existing interface
-  const [yearlyTargets, setYearlyTargets] = useState([
-    { year: 2024, target: 120 },
-    { year: 2025, target: 150 }
-  ]);
+  const [yearlyTargets, setYearlyTargets] = useState<Array<{ year: number; target: number }>>([]);
   
-  const [monthlyTargets, setMonthlyTargets] = useState<{ [year: number]: { [month: string]: number } }>({
-    2024: {
-      'Jan': 10, 'Feb': 10, 'Mar': 10, 'Apr': 10,
-      'Mei': 10, 'Jun': 10, 'Jul': 10, 'Agu': 10,
-      'Sep': 10, 'Okt': 10, 'Nov': 10, 'Des': 10
-    },
-    2025: {
-      'Jan': 12, 'Feb': 12, 'Mar': 12, 'Apr': 12,
-      'Mei': 13, 'Jun': 13, 'Jul': 13, 'Agu': 13,
-      'Sep': 13, 'Okt': 13, 'Nov': 13, 'Des': 13
-    }
-  });
+  const [monthlyTargets, setMonthlyTargets] = useState<{ [year: number]: { [month: string]: number } }>({});
 
   // Update local state when targets data is loaded from Supabase
   useEffect(() => {
@@ -104,9 +90,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   // Recalculate KPI when books, targets, or dates change
   useEffect(() => {
-    if (books.length > 0) {
-      setKpiData(calculateKPIData());
-    }
+    setKpiData(calculateKPIData());
   }, [books, yearlyTargets, monthlyTargets]);
 
   const setBooks = (books: Book[] | ((prev: Book[]) => Book[])) => {

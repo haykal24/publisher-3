@@ -23,7 +23,7 @@ interface Manuscript {
 interface AddManuscriptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddManuscript: (manuscript: Manuscript) => void;
+  onAddManuscript: (manuscript: Omit<Manuscript, 'id'>) => Promise<void>;
 }
 
 export function AddManuscriptModal({ isOpen, onClose, onAddManuscript }: AddManuscriptModalProps) {
@@ -43,23 +43,22 @@ export function AddManuscriptModal({ isOpen, onClose, onAddManuscript }: AddManu
     'Terbit'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title || !formData.author || !formData.dateReceived || !formData.genre) {
       return;
     }
 
-    const newManuscript: Manuscript = {
-      id: Date.now().toString(),
+    const newManuscript = {
       title: formData.title,
       author: formData.author,
-      dateReceived: formData.dateReceived.toISOString(),
+      dateReceived: formData.dateReceived.toISOString().split('T')[0],
       genre: formData.genre,
       status: formData.status
     };
 
-    onAddManuscript(newManuscript);
+    await onAddManuscript(newManuscript);
     
     // Reset form
     setFormData({

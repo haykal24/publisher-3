@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 interface EditBookModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpdateBook: (book: Book) => void;
+  onUpdateBook: (id: string, updates: Partial<Book>) => Promise<void>;
   book: Book | null;
 }
 
@@ -76,14 +76,13 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
     }
   }, [book, form]);
 
-  const onSubmit = (data: BookFormData) => {
+  const onSubmit = async (data: BookFormData) => {
     if (!book) return;
 
     const completedTasks = data.tasks.filter(task => task.status === 'Done').length;
     const progress = Math.round((completedTasks / data.tasks.length) * 100);
     
-    const updatedBook: Book = {
-      ...book,
+    const updates = {
       title: data.title,
       author: data.author,
       pic: data.pic,
@@ -93,19 +92,10 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
       totalTasks: data.tasks.length,
       status: data.status,
       deadline: data.deadline,
-      daysLeft: calculateDaysLeft(data.deadline),
-      tasks: data.tasks.map((task, index) => ({
-        ...book.tasks[index],
-        name: task.name,
-        pic: task.pic,
-        deadline: task.deadline,
-        notes: task.notes,
-        status: task.status,
-        daysLeft: calculateDaysLeft(task.deadline)
-      }))
+      daysLeft: calculateDaysLeft(data.deadline)
     };
 
-    onUpdateBook(updatedBook);
+    await onUpdateBook(book.id, updates);
     toast.success('Buku berhasil diupdate!');
     onClose();
   };

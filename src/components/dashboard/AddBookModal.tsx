@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 interface AddBookModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddBook: (book: Book) => void;
+  onAddBook: (book: Omit<Book, 'id' | 'createdAt'>) => Promise<void>;
 }
 
 interface BookFormData {
@@ -60,12 +60,11 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
     name: "tasks"
   });
 
-  const onSubmit = (data: BookFormData) => {
+  const onSubmit = async (data: BookFormData) => {
     const completedTasks = data.tasks.filter(task => task.status === 'Done').length;
     const progress = Math.round((completedTasks / 17) * 100);
     
-    const newBook: Book = {
-      id: Date.now().toString(),
+    const newBook = {
       title: data.title,
       author: data.author,
       pic: data.pic,
@@ -80,11 +79,10 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
         ...task,
         id: `${Date.now()}-${index + 1}`,
         daysLeft: calculateDaysLeft(task.deadline)
-      })),
-      createdAt: new Date().toISOString().split('T')[0]
+      }))
     };
 
-    onAddBook(newBook);
+    await onAddBook(newBook);
     toast.success('Buku berhasil ditambahkan!');
     form.reset();
     onClose();

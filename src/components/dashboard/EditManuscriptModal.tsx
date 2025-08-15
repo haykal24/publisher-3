@@ -24,7 +24,7 @@ interface EditManuscriptModalProps {
   isOpen: boolean;
   onClose: () => void;
   manuscript: Manuscript | null;
-  onUpdateManuscript: (manuscript: Manuscript) => void;
+  onUpdateManuscript: (id: string, updates: Partial<Manuscript>) => Promise<void>;
 }
 
 export function EditManuscriptModal({ isOpen, onClose, manuscript, onUpdateManuscript }: EditManuscriptModalProps) {
@@ -48,19 +48,22 @@ export function EditManuscriptModal({ isOpen, onClose, manuscript, onUpdateManus
     }
   }, [manuscript]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!manuscript || !formData.title || !formData.author || !formData.dateReceived || !formData.genre || !formData.status) {
       return;
     }
 
-    const updatedManuscript: Manuscript = {
-      ...manuscript,
-      ...formData
+    const updates = {
+      title: formData.title,
+      author: formData.author,
+      dateReceived: formData.dateReceived.split('T')[0], // Ensure date format
+      genre: formData.genre,
+      status: formData.status
     };
 
-    onUpdateManuscript(updatedManuscript);
+    await onUpdateManuscript(manuscript.id, updates);
   };
 
   const isFormValid = formData.title && formData.author && formData.dateReceived && formData.genre && formData.status;

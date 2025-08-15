@@ -8,11 +8,10 @@ import { BookDetailModal } from '@/components/dashboard/BookDetailModal';
 import { AddBookModal } from '@/components/dashboard/AddBookModal';
 import { EditBookModal } from '@/components/dashboard/EditBookModal';
 import { DeleteBookDialog } from '@/components/dashboard/DeleteBookDialog';
-import { sampleBooks } from '@/data/sampleData';
-import { useAppData } from '@/contexts/AppDataContext';
+import { useBooks } from '@/hooks/useSupabaseData';
 import { Book } from '@/types';
 export default function Books() {
-  const { books, setBooks } = useAppData();
+  const { books, addBook, updateBook, deleteBook } = useBooks();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
@@ -49,29 +48,25 @@ export default function Books() {
   const handleAddBook = () => {
     setIsAddModalOpen(true);
   };
-  const handleBookAdded = (newBook: Book) => {
-    setBooks(prevBooks => [...prevBooks, newBook]);
+  const handleBookAdded = async (newBook: Omit<Book, 'id' | 'createdAt'>) => {
+    await addBook(newBook);
   };
   const handleEditBook = (book: Book) => {
     setEditingBook(book);
     setIsEditModalOpen(true);
   };
 
-  const handleBookUpdated = (updatedBook: Book) => {
-    setBooks(prevBooks => 
-      prevBooks.map(book => 
-        book.id === updatedBook.id ? updatedBook : book
-      )
-    );
+  const handleBookUpdated = async (id: string, updates: Partial<Book>) => {
+    await updateBook(id, updates);
   };
   const handleDeleteBook = (book: Book) => {
     setDeletingBook(book);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deletingBook) {
-      setBooks(prevBooks => prevBooks.filter(book => book.id !== deletingBook.id));
+      await deleteBook(deletingBook.id);
       setIsDeleteDialogOpen(false);
       setDeletingBook(null);
     }

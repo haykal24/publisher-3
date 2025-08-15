@@ -10,12 +10,12 @@ import { AddManuscriptModal } from '@/components/dashboard/AddManuscriptModal';
 import { EditManuscriptModal } from '@/components/dashboard/EditManuscriptModal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { sampleManuscripts } from '@/data/sampleData';
+import { useManuscripts } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 
 export default function Manuscripts() {
   const { toast } = useToast();
-  const [manuscripts, setManuscripts] = useState(sampleManuscripts);
+  const { manuscripts, addManuscript, updateManuscript, deleteManuscript } = useManuscripts();
   const [searchTerm, setSearchTerm] = useState('');
   const [monthFilter, setMonthFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
@@ -39,8 +39,8 @@ export default function Manuscripts() {
     return matchesSearch && matchesMonth && matchesYear;
   });
 
-  const handleAddManuscript = (newManuscript: any) => {
-    setManuscripts(prev => [...prev, newManuscript]);
+  const handleAddManuscript = async (newManuscript: any) => {
+    await addManuscript(newManuscript);
   };
 
   const handleEditManuscript = (manuscript: any) => {
@@ -48,14 +48,14 @@ export default function Manuscripts() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateManuscript = (updatedManuscript: any) => {
-    setManuscripts(prev => prev.map(m => m.id === updatedManuscript.id ? updatedManuscript : m));
+  const handleUpdateManuscript = async (id: string, updates: any) => {
+    await updateManuscript(id, updates);
     setIsEditModalOpen(false);
     setEditingManuscript(null);
   };
 
-  const handleDeleteManuscript = (manuscriptId: string) => {
-    setManuscripts(prev => prev.filter(m => m.id !== manuscriptId));
+  const handleDeleteManuscript = async (manuscriptId: string) => {
+    await deleteManuscript(manuscriptId);
     toast({
       title: "Naskah dihapus",
       description: "Naskah berhasil dihapus dari sistem.",
