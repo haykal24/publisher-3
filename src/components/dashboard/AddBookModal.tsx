@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ interface BookFormData {
 
 export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) {
   const { teamMembers } = useTeamMembers();
+  
   const form = useForm<BookFormData>({
     defaultValues: {
       title: '',
@@ -49,7 +50,7 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
       notes: '',
       tasks: defaultTasks.map(task => ({
         name: task.name,
-        pic: task.pic,
+        pic: teamMembers.length > 0 ? teamMembers[0].name : '',
         deadline: task.deadline,
         notes: task.notes,
         status: task.status
@@ -61,6 +62,21 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
     control: form.control,
     name: "tasks"
   });
+
+  // Update form tasks when teamMembers are loaded
+  useEffect(() => {
+    if (teamMembers.length > 0 && isOpen) {
+      const tasksWithPic = defaultTasks.map(task => ({
+        name: task.name,
+        pic: teamMembers[0].name,
+        deadline: task.deadline,
+        notes: task.notes,
+        status: task.status
+      }));
+      
+      form.setValue('tasks', tasksWithPic);
+    }
+  }, [teamMembers, isOpen, form]);
 
   const onSubmit = async (data: BookFormData) => {
     const completedTasks = data.tasks.filter(task => task.status === 'Done').length;
