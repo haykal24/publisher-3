@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ChevronUp, ChevronDown, Trash2, Plus, Edit2, GripVertical } from 'lucide-react';
+import { ChevronUp, ChevronDown, Trash2, Plus, Edit2, GripVertical, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTasks } from '@/contexts/TasksContext';
+import { useSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ import {
 
 export function TaskManagement() {
   const { tasks, addTask, updateTask, deleteTask, moveTaskUp, moveTaskDown } = useTasks();
+  const { updateSetting } = useSettings();
   const [newTaskName, setNewTaskName] = useState('');
   const [editingTask, setEditingTask] = useState<{ id: string; name: string } | null>(null);
 
@@ -47,6 +49,22 @@ export function TaskManagement() {
   const handleDeleteTask = (id: string, name: string) => {
     deleteTask(id);
     toast.success(`Tugas "${name}" berhasil dihapus`);
+  };
+
+  const handleSaveTasksToDatabase = async () => {
+    try {
+      // Convert tasks to the format expected by the database
+      const taskTemplates = tasks.map(task => ({
+        id: task.id,
+        name: task.name,
+        order: task.order
+      }));
+      
+      await updateSetting('task_templates', taskTemplates);
+      toast.success('Template tugas berhasil disimpan ke database');
+    } catch (error) {
+      toast.error('Gagal menyimpan template tugas');
+    }
   };
 
   return (
@@ -174,6 +192,14 @@ export function TaskManagement() {
             )}
           </div>
         ))}
+      </div>
+      
+      {/* Save Button */}
+      <div className="flex justify-end pt-4 border-t">
+        <Button onClick={handleSaveTasksToDatabase} className="bg-primary hover:bg-primary/90">
+          <Save className="w-4 h-4 mr-2" />
+          Simpan Template Tugas ke Database
+        </Button>
       </div>
     </div>
   );
