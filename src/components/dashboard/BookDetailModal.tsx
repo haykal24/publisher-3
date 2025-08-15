@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -7,9 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, User, Building2, Clock, Edit, Trash2 } from 'lucide-react';
+import { Calendar, User, Building2, Clock, Edit, Trash2, Plus } from 'lucide-react';
 import { Book, Task } from '@/types';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/hooks/useSettings';
+import { tasksService } from '@/services/supabaseService';
+import { toast } from 'sonner';
 
 interface BookDetailModalProps {
   book: Book | null;
@@ -22,6 +25,47 @@ interface BookDetailModalProps {
 export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTask }: BookDetailModalProps) {
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editingTaskData, setEditingTaskData] = useState<Partial<Task>>({});
+  const [bookTasks, setBookTasks] = useState<Task[]>([]);
+
+  // Initialize tasks when book or modal opens
+  useEffect(() => {
+    if (book && isOpen) {
+      // Use existing book tasks or create default task list
+      const tasks = book.tasks && book.tasks.length > 0 ? book.tasks : createDefaultTasks(book);
+      setBookTasks(tasks);
+    }
+  }, [book, isOpen]);
+
+  const calculateDaysLeft = (deadline: string): number => {
+    const today = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const createDefaultTasks = (book: Book): Task[] => {
+    // Default production tasks based on the image you showed
+    const defaultTaskNames = [
+      'Cover Design',
+      'Pengantar & Endors',
+      'Editing Naskah', 
+      'Draf PK & Peta Buku',
+      'Layout',
+      'Desain Peta Buku',
+      'Print & Proofread Awal',
+      'QC Isi & ACC Kover Final'
+    ];
+
+    return defaultTaskNames.map((taskName, index) => ({
+      id: `${book.id}-task-${index}`,
+      name: taskName,
+      pic: book.pic,
+      deadline: book.deadline,
+      daysLeft: calculateDaysLeft(book.deadline),
+      notes: 'Catatan...',
+      status: 'Not Started' as const
+    }));
+  };
 
   if (!book) return null;
 
@@ -53,12 +97,6 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
     return 'text-success';
   };
 
-  const calculateDaysLeft = (deadline: string) => {
-    const today = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task.id);
@@ -156,7 +194,7 @@ export function BookDetailModal({ book, isOpen, onClose, onEditTask, onDeleteTas
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {book.tasks.map((task) => (
+                  {bookTasks.map((task) => (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">
                         {editingTask === task.id ? (

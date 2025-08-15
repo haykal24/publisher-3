@@ -177,7 +177,19 @@ export default function Books() {
         )}
       </div>
 
-      <BookDetailModal book={selectedBook} isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} />
+      <BookDetailModal 
+        book={selectedBook} 
+        isOpen={isDetailModalOpen} 
+        onClose={() => setIsDetailModalOpen(false)}
+        onEditTask={async (taskId, updates) => {
+          // Handle task update
+          console.log('Editing task:', taskId, updates);
+        }}
+        onDeleteTask={async (taskId) => {
+          // Handle task deletion
+          console.log('Deleting task:', taskId);
+        }}
+      />
 
       <AddBookModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAddBook={handleBookAdded} />
       
