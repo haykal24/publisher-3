@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Book } from '@/types';
+import { Edit, Trash2 } from 'lucide-react';
+import { Book, Task } from '@/types';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTeamMembers } from '@/hooks/useSupabaseData';
 
@@ -37,6 +40,9 @@ interface BookFormData {
 
 export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookModalProps) {
   const { teamMembers } = useTeamMembers();
+  const [editingTask, setEditingTask] = useState<string | null>(null);
+  const [editingTaskData, setEditingTaskData] = useState<Partial<Task>>({});
+  
   const form = useForm<BookFormData>({
     defaultValues: {
       title: '',
@@ -137,6 +143,73 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
     const diffTime = deadlineDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Done':
+        return 'bg-success text-success-foreground';
+      case 'In Progress':
+        return 'bg-primary text-primary-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getDaysLeftColor = (daysLeft: number) => {
+    if (daysLeft < 0) return 'text-error';
+    if (daysLeft <= 7) return 'text-warning';
+    return 'text-success';
+  };
+
+  const handleEditTask = (task: any, index: number) => {
+    setEditingTask(`${index}`);
+    setEditingTaskData({
+      name: task.name,
+      pic: task.pic,
+      deadline: task.deadline,
+      status: task.status,
+      notes: task.notes
+    });
+  };
+
+  const handleSaveTask = (index: number) => {
+    if (editingTaskData.deadline && editingTaskData.name && editingTaskData.pic && editingTaskData.status) {
+      const updatedTask = {
+        name: editingTaskData.name,
+        pic: editingTaskData.pic,
+        deadline: editingTaskData.deadline,
+        notes: editingTaskData.notes || '',
+        status: editingTaskData.status
+      };
+      update(index, updatedTask);
+    }
+    setEditingTask(null);
+    setEditingTaskData({});
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+    setEditingTaskData({});
+  };
+
+  const updateTaskField = (field: keyof Task, value: string) => {
+    setEditingTaskData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleDeleteTask = (index: number) => {
+    // Reset task to default values instead of removing
+    const defaultTask = {
+      name: fields[index].name,
+      pic: book?.pic || '',
+      deadline: book?.deadline || '',
+      notes: 'Catatan...',
+      status: 'Not Started' as const
+    };
+    update(index, defaultTask);
   };
 
   return (
@@ -291,84 +364,147 @@ export function EditBookModal({ isOpen, onClose, onUpdateBook, book }: EditBookM
 
             {/* Tasks Table */}
             <div className="space-y-4">
-              <FormLabel className="text-base font-semibold">Daftar Tugas</FormLabel>
-              <div className="border rounded-lg overflow-hidden">
+              <FormLabel className="text-base font-semibold">Daftar Tugas Produksi</FormLabel>
+              <div className="border rounded-lg overflow-x-auto">
+                <div className="min-w-[800px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nama Tugas</TableHead>
                       <TableHead>PIC</TableHead>
                       <TableHead>Deadline</TableHead>
+                      <TableHead>Days Left</TableHead>
+                      <TableHead>Notes</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Catatan</TableHead>
+                      <TableHead>Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fields.map((field, index) => (
-                      <TableRow key={field.id}>
-                        <TableCell className="font-medium">
-                          {field.name}
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={form.watch(`tasks.${index}.pic`)}
-                            onValueChange={(value) => {
-                              update(index, { ...field, pic: value });
-                            }}
-                          >
-                            <SelectTrigger className="bg-background border-0 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border z-50">
-                              {teamMembers.map((member) => (
-                                <SelectItem key={member.id} value={member.name}>
-                                  {member.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="date"
-                            value={form.watch(`tasks.${index}.deadline`)}
-                            onChange={(e) => {
-                              update(index, { ...field, deadline: e.target.value });
-                            }}
-                            className="border-0 h-8"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={form.watch(`tasks.${index}.status`)}
-                            onValueChange={(value) => {
-                              update(index, { ...field, status: value as 'Not Started' | 'In Progress' | 'Done' });
-                            }}
-                          >
-                            <SelectTrigger className="bg-background border-0 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border z-50">
-                              <SelectItem value="Not Started">Not Started</SelectItem>
-                              <SelectItem value="In Progress">In Progress</SelectItem>
-                              <SelectItem value="Done">Done</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            placeholder="Catatan..."
-                            value={form.watch(`tasks.${index}.notes`)}
-                            onChange={(e) => {
-                              update(index, { ...field, notes: e.target.value });
-                            }}
-                            className="border-0 h-8"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {fields.map((field, index) => {
+                      const task = form.watch(`tasks.${index}`);
+                      const daysLeft = task?.deadline ? calculateDaysLeft(task.deadline) : 0;
+                      
+                      return (
+                        <TableRow key={field.id}>
+                          <TableCell className="font-medium">
+                            {editingTask === `${index}` ? (
+                              <Input 
+                                value={editingTaskData.name || ''} 
+                                onChange={(e) => updateTaskField('name', e.target.value)}
+                                className="min-w-[150px]" 
+                              />
+                            ) : (
+                              field.name
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingTask === `${index}` ? (
+                              <Select 
+                                value={editingTaskData.pic || ''} 
+                                onValueChange={(value) => updateTaskField('pic', value)}
+                              >
+                                <SelectTrigger className="min-w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {teamMembers.map((member) => (
+                                    <SelectItem key={member.id} value={member.name}>
+                                      {member.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              task?.pic || ''
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingTask === `${index}` ? (
+                              <Input 
+                                type="date" 
+                                value={editingTaskData.deadline || ''} 
+                                onChange={(e) => updateTaskField('deadline', e.target.value)}
+                                className="min-w-[150px]" 
+                              />
+                            ) : (
+                              task?.deadline ? new Date(task.deadline).toLocaleDateString('id-ID') : ''
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn("text-sm", getDaysLeftColor(daysLeft))}>
+                              {daysLeft > 0 ? `${daysLeft} hari` : daysLeft === 0 ? 'Hari ini' : `Terlambat ${Math.abs(daysLeft)} hari`}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {editingTask === `${index}` ? (
+                              <Textarea 
+                                value={editingTaskData.notes || ''} 
+                                onChange={(e) => updateTaskField('notes', e.target.value)}
+                                className="min-h-[60px] min-w-[150px]" 
+                                placeholder="Tambahkan catatan..." 
+                              />
+                            ) : (
+                              <span className="text-sm">{task?.notes || '-'}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingTask === `${index}` ? (
+                              <Select 
+                                value={editingTaskData.status || ''} 
+                                onValueChange={(value) => updateTaskField('status', value)}
+                              >
+                                <SelectTrigger className="min-w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Not Started">Not Started</SelectItem>
+                                  <SelectItem value="In Progress">In Progress</SelectItem>
+                                  <SelectItem value="Done">Done</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge className={cn("text-xs", getStatusColor(task?.status || 'Not Started'))}>
+                                {task?.status || 'Not Started'}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editingTask === `${index}` ? (
+                              <div className="flex gap-1">
+                                <Button size="sm" onClick={() => handleSaveTask(index)} className="h-8 px-3">
+                                  Simpan
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-8 px-3">
+                                  Batal
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleEditTask(task, index)} 
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleDeleteTask(index)} 
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             </div>
 
