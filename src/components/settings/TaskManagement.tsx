@@ -198,7 +198,7 @@ export function TaskManagement() {
       <div className="flex justify-end pt-4 border-t">
         <Button onClick={handleSaveTasksToDatabase} className="bg-primary hover:bg-primary/90">
           <Save className="w-4 h-4 mr-2" />
-          Simpan Template Tugas ke Database
+          Simpan Perubahan
         </Button>
       </div>
     </div>
