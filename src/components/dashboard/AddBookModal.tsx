@@ -11,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Book, Task } from '@/types';
 import { defaultTasks } from '@/data/sampleData';
 import { useTeamMembers } from '@/hooks/useSupabaseData';
+import { useRoleBasedData } from '@/hooks/useRoleBasedData';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { toast } from 'sonner';
 
 interface AddBookModalProps {
@@ -38,13 +40,15 @@ interface BookFormData {
 
 export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) {
   const { teamMembers } = useTeamMembers();
+  const { getDefaultPublisher, userPublisher } = useRoleBasedData();
+  const { isPublisher } = useRoleAccess();
   
   const form = useForm<BookFormData>({
     defaultValues: {
       title: '',
       author: '',
       pic: '',
-      publisher: 'Renebook',
+      publisher: getDefaultPublisher() as 'Renebook' | 'Turos Pustaka' | 'Reneluv' | 'Renekids' | 'Milestone',
       deadline: '',
       status: 'Not Started',
       notes: '',
@@ -82,11 +86,14 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
     const completedTasks = data.tasks.filter(task => task.status === 'Done').length;
     const progress = Math.round((completedTasks / 17) * 100);
     
+    // For publisher roles, force the publisher to be their role
+    const finalPublisher = isPublisher ? userPublisher : data.publisher;
+    
     const newBook = {
       title: data.title,
       author: data.author,
       pic: data.pic,
-      publisher: data.publisher,
+      publisher: finalPublisher as 'Renebook' | 'Turos Pustaka' | 'Reneluv' | 'Renekids' | 'Milestone',
       progress: progress,
       completedTasks: completedTasks,
       totalTasks: 17,
@@ -187,20 +194,28 @@ export function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Penerbit</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="Pilih penerbit" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background border z-50">
-                        <SelectItem value="Renebook">Renebook</SelectItem>
-                        <SelectItem value="Turos Pustaka">Turos Pustaka</SelectItem>
-                        <SelectItem value="Reneluv">Reneluv</SelectItem>
-                        <SelectItem value="Renekids">Renekids</SelectItem>
-                        <SelectItem value="Milestone">Milestone</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isPublisher ? (
+                      <Input 
+                        value={userPublisher || ''} 
+                        disabled 
+                        className="bg-muted"
+                      />
+                    ) : (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Pilih penerbit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border z-50">
+                          <SelectItem value="Renebook">Renebook</SelectItem>
+                          <SelectItem value="Turos Pustaka">Turos Pustaka</SelectItem>
+                          <SelectItem value="Reneluv">Reneluv</SelectItem>
+                          <SelectItem value="Renekids">Renekids</SelectItem>
+                          <SelectItem value="Milestone">Milestone</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

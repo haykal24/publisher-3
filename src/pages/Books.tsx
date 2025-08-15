@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,11 @@ import { AddBookModal } from '@/components/dashboard/AddBookModal';
 import { EditBookModal } from '@/components/dashboard/EditBookModal';
 import { DeleteBookDialog } from '@/components/dashboard/DeleteBookDialog';
 import { useBooks } from '@/hooks/useSupabaseData';
+import { useRoleBasedData } from '@/hooks/useRoleBasedData';
 import { Book } from '@/types';
 export default function Books() {
   const { books, addBook, updateBook, deleteBook } = useBooks();
+  const { filterBooksByRole } = useRoleBasedData();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
@@ -24,7 +26,11 @@ export default function Books() {
   const [deletingBook, setDeletingBook] = useState<Book | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
-  const filteredBooks = books.filter(book => {
+
+  // Apply role-based filtering first
+  const roleFilteredBooks = useMemo(() => filterBooksByRole(books), [books, filterBooksByRole]);
+  
+  const filteredBooks = roleFilteredBooks.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || book.pic.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || book.status === statusFilter;
     

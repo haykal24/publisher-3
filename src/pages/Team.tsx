@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AddTeamMemberModal } from '@/components/team/AddTeamMemberModal';
 import { EditTeamMemberModal } from '@/components/team/EditTeamMemberModal';
 import { DeleteTeamMemberDialog } from '@/components/team/DeleteTeamMemberDialog';
+import { RoleGuard } from '@/components/auth/RoleGuard';
 import { TeamMember } from '@/types';
 import { useTeamMembers } from '@/hooks/useSupabaseData';
 
@@ -70,7 +71,8 @@ export default function Team() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <RoleGuard menuItem="Tim">
+      <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manajemen Tim</h1>
@@ -139,6 +141,7 @@ export default function Team() {
         onConfirm={confirmDeleteMember} 
         member={deletingMember} 
       />
-    </div>
+      </div>
+    </RoleGuard>
   );
 }
