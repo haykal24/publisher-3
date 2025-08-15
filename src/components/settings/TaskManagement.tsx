@@ -24,34 +24,7 @@ export function TaskManagement() {
   const [newTaskName, setNewTaskName] = useState('');
   const [editingTask, setEditingTask] = useState<{ id: string; name: string } | null>(null);
 
-  const handleAddTask = () => {
-    if (!newTaskName.trim()) {
-      toast.error('Nama tugas tidak boleh kosong');
-      return;
-    }
-    
-    addTask(newTaskName.trim());
-    setNewTaskName('');
-    toast.success('Tugas berhasil ditambahkan');
-  };
-
-  const handleUpdateTask = () => {
-    if (!editingTask || !editingTask.name.trim()) {
-      toast.error('Nama tugas tidak boleh kosong');
-      return;
-    }
-    
-    updateTask(editingTask.id, editingTask.name.trim());
-    setEditingTask(null);
-    toast.success('Tugas berhasil diperbarui');
-  };
-
-  const handleDeleteTask = (id: string, name: string) => {
-    deleteTask(id);
-    toast.success(`Tugas "${name}" berhasil dihapus`);
-  };
-
-  const handleSaveTasksToDatabase = async () => {
+  const saveTasksToDatabase = async () => {
     try {
       // Convert tasks to the format expected by the database
       const taskTemplates = tasks.map(task => ({
@@ -61,10 +34,73 @@ export function TaskManagement() {
       }));
       
       await updateSetting('task_templates', taskTemplates);
-      toast.success('Template tugas berhasil disimpan ke database');
     } catch (error) {
-      toast.error('Gagal menyimpan template tugas');
+      console.error('Failed to save tasks:', error);
     }
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskName.trim()) {
+      toast.error('Nama tugas tidak boleh kosong');
+      return;
+    }
+    
+    addTask(newTaskName.trim());
+    setNewTaskName('');
+    
+    // Auto-save to database
+    setTimeout(async () => {
+      await saveTasksToDatabase();
+    }, 100);
+    toast.success('Tugas berhasil ditambahkan dan disimpan');
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editingTask || !editingTask.name.trim()) {
+      toast.error('Nama tugas tidak boleh kosong');
+      return;
+    }
+    
+    updateTask(editingTask.id, editingTask.name.trim());
+    setEditingTask(null);
+    
+    // Auto-save to database
+    setTimeout(async () => {
+      await saveTasksToDatabase();
+    }, 100);
+    toast.success('Tugas berhasil diperbarui dan disimpan');
+  };
+
+  const handleDeleteTask = async (id: string, name: string) => {
+    deleteTask(id);
+    
+    // Auto-save to database
+    setTimeout(async () => {
+      await saveTasksToDatabase();
+    }, 100);
+    toast.success(`Tugas "${name}" berhasil dihapus dan disimpan`);
+  };
+
+  const handleMoveTaskUp = async (index: number) => {
+    if (index === 0) return;
+    moveTaskUp(index);
+    
+    // Auto-save to database
+    setTimeout(async () => {
+      await saveTasksToDatabase();
+    }, 100);
+    toast.success('Urutan tugas berhasil diubah dan disimpan');
+  };
+
+  const handleMoveTaskDown = async (index: number) => {
+    if (index === tasks.length - 1) return;
+    moveTaskDown(index);
+    
+    // Auto-save to database
+    setTimeout(async () => {
+      await saveTasksToDatabase();
+    }, 100);
+    toast.success('Urutan tugas berhasil diubah dan disimpan');
   };
 
   return (
@@ -129,24 +165,24 @@ export function TaskManagement() {
             {!editingTask && (
               <div className="flex gap-1">
                 {/* Move Up/Down Buttons */}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => moveTaskUp(index)}
-                  disabled={index === 0}
-                  className="p-2"
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => moveTaskDown(index)}
-                  disabled={index === tasks.length - 1}
-                  className="p-2"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
+                 <Button
+                   size="sm"
+                   variant="outline"
+                   onClick={() => handleMoveTaskUp(index)}
+                   disabled={index === 0}
+                   className="p-2"
+                 >
+                   <ChevronUp className="w-4 h-4" />
+                 </Button>
+                 <Button
+                   size="sm"
+                   variant="outline"
+                   onClick={() => handleMoveTaskDown(index)}
+                   disabled={index === tasks.length - 1}
+                   className="p-2"
+                 >
+                   <ChevronDown className="w-4 h-4" />
+                 </Button>
                 
                 {/* Edit Button */}
                 <Button
@@ -194,13 +230,6 @@ export function TaskManagement() {
         ))}
       </div>
       
-      {/* Save Button */}
-      <div className="flex justify-end pt-4 border-t">
-        <Button onClick={handleSaveTasksToDatabase} className="bg-primary hover:bg-primary/90">
-          <Save className="w-4 h-4 mr-2" />
-          Simpan Perubahan
-        </Button>
-      </div>
     </div>
   );
 }
