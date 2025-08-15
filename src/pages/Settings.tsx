@@ -19,6 +19,14 @@ export default function SettingsPage() {
   const { settings, loading, updateSetting } = useSettings();
   const [profileImage, setProfileImage] = useState<string>('/placeholder.svg');
   
+  // Profile form state
+  const [profileData, setProfileData] = useState({
+    name: 'Andi Setiawan',
+    email: 'andi@rtgpublishing.com',
+    role: 'manajer',
+    password: ''
+  });
+  
   // Local state that mirrors settings for immediate UI updates
   const [publishers, setPublishers] = useState<string[]>([]);
   const [newPublisher, setNewPublisher] = useState('');
@@ -64,6 +72,22 @@ export default function SettingsPage() {
       toast.success('Foto profil berhasil diubah');
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      // Save profile data to settings
+      await updateSetting('user_profile', {
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role,
+        avatar: profileImage
+      });
+      
+      toast.success('Profil berhasil disimpan');
+    } catch (error) {
+      toast.error('Gagal menyimpan profil');
+    }
   };
 
   const handleAddPublisher = async () => {
@@ -232,15 +256,27 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nama Lengkap</Label>
-                  <Input id="name" defaultValue="Andi Setiawan" />
+                  <Input 
+                    id="name" 
+                    value={profileData.name} 
+                    onChange={e => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="andi@rtgpublishing.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={profileData.email}
+                    onChange={e => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Peran</Label>
-                  <Select defaultValue="manajer">
+                  <Select 
+                    value={profileData.role} 
+                    onValueChange={value => setProfileData(prev => ({ ...prev, role: value }))}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -257,10 +293,16 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password Baru</Label>
-                  <Input id="password" type="password" placeholder="Kosongkan jika tidak ingin mengubah" />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="Kosongkan jika tidak ingin mengubah"
+                    value={profileData.password}
+                    onChange={e => setProfileData(prev => ({ ...prev, password: e.target.value }))}
+                  />
                 </div>
               </div>
-              <Button className="w-full md:w-auto">Simpan Perubahan</Button>
+              <Button className="w-full md:w-auto" onClick={handleSaveProfile}>Simpan Perubahan</Button>
             </CardContent>
           </Card>
         </TabsContent>
