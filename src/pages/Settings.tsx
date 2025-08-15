@@ -157,7 +157,7 @@ export default function SettingsPage() {
     }
   };
 
-  const updatePublishingTarget = (year: string, field: 'annual' | string, value: number) => {
+  const updatePublishingTarget = async (year: string, field: 'annual' | string, value: number) => {
     const updatedTargets = {
       ...settings.publishingTargets,
       [year]: {
@@ -165,10 +165,21 @@ export default function SettingsPage() {
         [field]: value
       }
     };
-    // Update in hook would be needed here for real-time updates
+    await updateSetting('publishing_targets', updatedTargets);
   };
 
-  const updateMonthlyTarget = (year: string, month: string, value: number) => {
+  const updateAcquisitionTarget = async (year: string, field: 'annual' | string, value: number) => {
+    const updatedTargets = {
+      ...settings.acquisitionTargets,
+      [year]: {
+        ...settings.acquisitionTargets[year],
+        [field]: value
+      }
+    };
+    await updateSetting('acquisition_targets', updatedTargets);
+  };
+
+  const updateMonthlyTarget = async (year: string, month: string, value: number) => {
     const updatedTargets = {
       ...settings.publishingTargets,
       [year]: {
@@ -179,7 +190,21 @@ export default function SettingsPage() {
         }
       }
     };
-    // Update in hook would be needed here for real-time updates
+    await updateSetting('publishing_targets', updatedTargets);
+  };
+
+  const updateAcquisitionMonthlyTarget = async (year: string, month: string, value: number) => {
+    const updatedTargets = {
+      ...settings.acquisitionTargets,
+      [year]: {
+        ...settings.acquisitionTargets[year],
+        monthly: {
+          ...settings.acquisitionTargets[year]?.monthly,
+          [month]: value
+        }
+      }
+    };
+    await updateSetting('acquisition_targets', updatedTargets);
   };
 
   const addNewYear = async (type: 'publishing' | 'acquisition') => {
@@ -442,6 +467,7 @@ export default function SettingsPage() {
                 <Input 
                   type="number" 
                   value={settings.acquisitionTargets[selectedAcquisitionYear]?.annual || 0} 
+                  onChange={e => updateAcquisitionTarget(selectedAcquisitionYear.toString(), 'annual', parseInt(e.target.value) || 0)}
                   className="w-full text-lg font-medium" 
                   placeholder="200" 
                 />
@@ -456,6 +482,7 @@ export default function SettingsPage() {
                       <Input 
                         type="number" 
                         value={target} 
+                        onChange={e => updateAcquisitionMonthlyTarget(selectedAcquisitionYear.toString(), month, parseInt(e.target.value) || 0)}
                         className="w-16 text-center text-sm" 
                       />
                     </div>
