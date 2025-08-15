@@ -5,12 +5,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState, useMemo } from 'react';
 import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
 import { useAppData } from '@/contexts/AppDataContext';
+import { useBooks } from '@/hooks/useSupabaseData';
 
 export default function Targets() {
   const analytics = useRealTimeAnalytics();
   const { yearlyTargets, currentYear } = useAppData();
-  const [monthFilter, setMonthFilter] = useState('08');
-  const [yearFilter, setYearFilter] = useState('2024');
+  const { books } = useBooks();
+  const [monthFilter, setMonthFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
+  
+  // Get available years from book data
+  const availableYears = useMemo(() => {
+    const years = books.map(book => new Date(book.deadline).getFullYear());
+    const uniqueYears = [...new Set(years)].sort((a, b) => b - a);
+    return uniqueYears;
+  }, [books]);
+
+  // All months data
+  const allMonths = [
+    { value: '01', label: 'Januari' },
+    { value: '02', label: 'Februari' },
+    { value: '03', label: 'Maret' },
+    { value: '04', label: 'April' },
+    { value: '05', label: 'Mei' },
+    { value: '06', label: 'Juni' },
+    { value: '07', label: 'Juli' },
+    { value: '08', label: 'Agustus' },
+    { value: '09', label: 'September' },
+    { value: '10', label: 'Oktober' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'Desember' }
+  ];
   
   // Calculate KPIs from real-time data
   const currentYearTarget = yearlyTargets.find(t => t.year === currentYear)?.target || 0;
@@ -28,21 +53,28 @@ export default function Targets() {
         <div className="flex gap-2">
           <Select value={monthFilter} onValueChange={setMonthFilter}>
             <SelectTrigger className="w-32">
-              <SelectValue />
+              <SelectValue placeholder="Pilih Bulan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="08">Agustus</SelectItem>
-              <SelectItem value="07">Juli</SelectItem>
-              <SelectItem value="06">Juni</SelectItem>
+              <SelectItem value="all">Semua Bulan</SelectItem>
+              {allMonths.map(month => (
+                <SelectItem key={month.value} value={month.value}>
+                  {month.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger className="w-24">
-              <SelectValue />
+              <SelectValue placeholder="Pilih Tahun" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="all">Semua</SelectItem>
+              {availableYears.map(year => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
