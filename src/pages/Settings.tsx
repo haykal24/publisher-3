@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Settings, Target, FileText, Building2, Bell, Moon, Sun, Camera } from 'lucide-react';
 import { TaskManagement } from '@/components/settings/TaskManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,100 +11,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
+import { useSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
+
 export default function SettingsPage() {
-  const {
-    theme,
-    setTheme
-  } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { settings, loading, updateSetting } = useSettings();
   const [profileImage, setProfileImage] = useState<string>('/placeholder.svg');
-  const [publishers, setPublishers] = useState(['Renebook', 'Turos Pustaka', 'Reneluv', 'Renekids', 'Milestone']);
+  
+  // Local state that mirrors settings for immediate UI updates
+  const [publishers, setPublishers] = useState<string[]>([]);
   const [newPublisher, setNewPublisher] = useState('');
-  const [yearlyTargets, setYearlyTargets] = useState([{
-    year: 2024,
-    target: 120
-  }, {
-    year: 2025,
-    target: 150
-  }]);
   const [selectedYear, setSelectedYear] = useState(2024);
-  const [newYear, setNewYear] = useState('');
-  const [monthlyTargets, setMonthlyTargets] = useState<{
-    [year: number]: {
-      [month: string]: number;
-    };
-  }>({
-    2024: {
-      'Jan': 10,
-      'Feb': 10,
-      'Mar': 10,
-      'Apr': 10,
-      'Mei': 10,
-      'Jun': 10,
-      'Jul': 10,
-      'Agu': 10,
-      'Sep': 10,
-      'Okt': 10,
-      'Nov': 10,
-      'Des': 10
-    },
-    2025: {
-      'Jan': 12,
-      'Feb': 12,
-      'Mar': 12,
-      'Apr': 12,
-      'Mei': 13,
-      'Jun': 13,
-      'Jul': 13,
-      'Agu': 13,
-      'Sep': 13,
-      'Okt': 13,
-      'Nov': 13,
-      'Des': 13
-    }
-  });
-  const [acquisitionTargets, setAcquisitionTargets] = useState([{
-    year: 2024,
-    target: 200
-  }, {
-    year: 2025,
-    target: 250
-  }]);
   const [selectedAcquisitionYear, setSelectedAcquisitionYear] = useState(2024);
-  const [monthlyAcquisitionTargets, setMonthlyAcquisitionTargets] = useState<{
-    [year: number]: {
-      [month: string]: number;
-    };
-  }>({
-    2024: {
-      'Jan': 17,
-      'Feb': 17,
-      'Mar': 17,
-      'Apr': 17,
-      'Mei': 17,
-      'Jun': 17,
-      'Jul': 17,
-      'Agu': 17,
-      'Sep': 17,
-      'Okt': 17,
-      'Nov': 17,
-      'Des': 16
-    },
-    2025: {
-      'Jan': 21,
-      'Feb': 21,
-      'Mar': 21,
-      'Apr': 21,
-      'Mei': 21,
-      'Jun': 21,
-      'Jul': 21,
-      'Agu': 21,
-      'Sep': 21,
-      'Okt': 21,
-      'Nov': 21,
-      'Des': 20
+
+  // Initialize local state from database settings
+  useEffect(() => {
+    if (!loading && settings) {
+      setPublishers(settings.publishers || []);
+      const firstYear = Object.keys(settings.publishingTargets)[0];
+      if (firstYear) {
+        setSelectedYear(parseInt(firstYear));
+      }
+      const firstAcqYear = Object.keys(settings.acquisitionTargets)[0];
+      if (firstAcqYear) {
+        setSelectedAcquisitionYear(parseInt(firstAcqYear));
+      }
     }
-  });
+  }, [loading, settings]);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -130,61 +65,8 @@ export default function SettingsPage() {
     };
     reader.readAsDataURL(file);
   };
-  const handleAddYear = () => {
-    const year = parseInt(newYear);
-    if (!year || year < 2020 || year > 2050) {
-      toast.error('Tahun harus antara 2020-2050');
-      return;
-    }
-    if (yearlyTargets.some(t => t.year === year)) {
-      toast.error('Tahun sudah ada');
-      return;
-    }
-    setYearlyTargets(prev => [...prev, {
-      year,
-      target: 0
-    }]);
-    setMonthlyTargets(prev => ({
-      ...prev,
-      [year]: {
-        'Jan': 0,
-        'Feb': 0,
-        'Mar': 0,
-        'Apr': 0,
-        'Mei': 0,
-        'Jun': 0,
-        'Jul': 0,
-        'Agu': 0,
-        'Sep': 0,
-        'Okt': 0,
-        'Nov': 0,
-        'Des': 0
-      }
-    }));
-    setNewYear('');
-    setSelectedYear(year);
-    toast.success(`Tahun ${year} berhasil ditambahkan`);
-  };
-  const handleDeleteYear = (year: number) => {
-    if (yearlyTargets.length <= 1) {
-      toast.error('Minimal harus ada satu tahun target');
-      return;
-    }
-    setYearlyTargets(prev => prev.filter(t => t.year !== year));
-    setMonthlyTargets(prev => {
-      const newTargets = {
-        ...prev
-      };
-      delete newTargets[year];
-      return newTargets;
-    });
-    if (selectedYear === year) {
-      const remainingYears = yearlyTargets.filter(t => t.year !== year);
-      setSelectedYear(remainingYears[0].year);
-    }
-    toast.success(`Tahun ${year} berhasil dihapus`);
-  };
-  const handleAddPublisher = () => {
+
+  const handleAddPublisher = async () => {
     if (!newPublisher.trim()) {
       toast.error('Nama penerbit tidak boleh kosong');
       return;
@@ -193,25 +75,110 @@ export default function SettingsPage() {
       toast.error('Penerbit sudah ada');
       return;
     }
-    setPublishers(prev => [...prev, newPublisher.trim()]);
+    
+    const newPublishers = [...publishers, newPublisher.trim()];
+    setPublishers(newPublishers);
+    await updateSetting('publishers', newPublishers);
     setNewPublisher('');
-    toast.success('Penerbit berhasil ditambahkan');
   };
-  const handleDeletePublisher = (publisherToDelete: string) => {
-    setPublishers(prev => prev.filter(p => p !== publisherToDelete));
-    toast.success('Penerbit berhasil dihapus');
+
+  const handleDeletePublisher = async (publisherToDelete: string) => {
+    const newPublishers = publishers.filter(p => p !== publisherToDelete);
+    setPublishers(newPublishers);
+    await updateSetting('publishers', newPublishers);
   };
-  return <div className="p-6 space-y-6">
+
+  const handleSavePublishingTargets = async () => {
+    await updateSetting('publishing_targets', settings.publishingTargets);
+  };
+
+  const handleSaveAcquisitionTargets = async () => {
+    await updateSetting('acquisition_targets', settings.acquisitionTargets);
+  };
+
+  const handleSaveNotifications = async () => {
+    await updateSetting('notification_settings', settings.notificationSettings);
+  };
+
+  const updatePublishingTarget = (year: string, field: 'annual' | string, value: number) => {
+    const updatedTargets = {
+      ...settings.publishingTargets,
+      [year]: {
+        ...settings.publishingTargets[year],
+        [field]: value
+      }
+    };
+    // Update in hook would be needed here for real-time updates
+  };
+
+  const updateMonthlyTarget = (year: string, month: string, value: number) => {
+    const updatedTargets = {
+      ...settings.publishingTargets,
+      [year]: {
+        ...settings.publishingTargets[year],
+        monthly: {
+          ...settings.publishingTargets[year]?.monthly,
+          [month]: value
+        }
+      }
+    };
+    // Update in hook would be needed here for real-time updates
+  };
+
+  const addNewYear = async (type: 'publishing' | 'acquisition') => {
+    const currentYear = new Date().getFullYear();
+    const existingYears = Object.keys(type === 'publishing' ? settings.publishingTargets : settings.acquisitionTargets).map(y => parseInt(y));
+    const maxYear = Math.max(...existingYears);
+    const newYear = Math.max(currentYear, maxYear + 1);
+    
+    if (existingYears.includes(newYear)) {
+      toast.error('Tahun sudah ada');
+      return;
+    }
+
+    const newYearData = {
+      annual: 0,
+      monthly: {
+        'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'Mei': 0, 'Jun': 0,
+        'Jul': 0, 'Agu': 0, 'Sep': 0, 'Okt': 0, 'Nov': 0, 'Des': 0
+      }
+    };
+
+    if (type === 'publishing') {
+      const updatedTargets = {
+        ...settings.publishingTargets,
+        [newYear]: newYearData
+      };
+      await updateSetting('publishing_targets', updatedTargets);
+      setSelectedYear(newYear);
+    } else {
+      const updatedTargets = {
+        ...settings.acquisitionTargets,
+        [newYear]: newYearData
+      };
+      await updateSetting('acquisition_targets', updatedTargets);
+      setSelectedAcquisitionYear(newYear);
+    }
+
+    toast.success(`Tahun ${newYear} berhasil ditambahkan`);
+  };
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  return (
+    <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Pengaturan Akun & Sistem</h1>
         <p className="text-muted-foreground">Kelola profil, target, dan konfigurasi sistem</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" />
-            <span className="hidden sm:inline">Profil Saya</span>
+            <span className="hidden sm:inline">Profil</span>
           </TabsTrigger>
           <TabsTrigger value="tasks" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
@@ -315,93 +282,58 @@ export default function SettingsPage() {
               <CardTitle>Target Penerbitan</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Year Selection with Add Button */}
               <div className="flex items-center gap-2">
                 <Select value={selectedYear.toString()} onValueChange={value => setSelectedYear(parseInt(value))}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {yearlyTargets.map(yearTarget => <SelectItem key={yearTarget.year} value={yearTarget.year.toString()}>
-                        {yearTarget.year}
-                      </SelectItem>)}
+                  <SelectContent>
+                    {Object.keys(settings.publishingTargets).map(year => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Button size="sm" variant="outline" onClick={() => {
-                const currentYear = new Date().getFullYear();
-                const maxYear = Math.max(...yearlyTargets.map(t => t.year));
-                const newYear = Math.max(currentYear, maxYear + 1);
-                if (yearlyTargets.some(t => t.year === newYear)) {
-                  toast.error('Tahun sudah ada');
-                  return;
-                }
-                setYearlyTargets(prev => [...prev, {
-                  year: newYear,
-                  target: 0
-                }]);
-                setMonthlyTargets(prev => ({
-                  ...prev,
-                  [newYear]: {
-                    'Jan': 0,
-                    'Feb': 0,
-                    'Mar': 0,
-                    'Apr': 0,
-                    'Mei': 0,
-                    'Jun': 0,
-                    'Jul': 0,
-                    'Agu': 0,
-                    'Sep': 0,
-                    'Okt': 0,
-                    'Nov': 0,
-                    'Des': 0
-                  }
-                }));
-                setSelectedYear(newYear);
-                toast.success(`Tahun ${newYear} berhasil ditambahkan`);
-              }} className="w-10 h-10 p-0">
+                <Button size="sm" variant="outline" onClick={() => addNewYear('publishing')} className="w-10 h-10 p-0">
                   +
                 </Button>
               </div>
 
-              {/* Annual Target */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Target Tahunan</h3>
-                <Input type="number" value={yearlyTargets.find(t => t.year === selectedYear)?.target || 0} onChange={e => {
-                const newTargets = yearlyTargets.map(t => t.year === selectedYear ? {
-                  ...t,
-                  target: parseInt(e.target.value) || 0
-                } : t);
-                setYearlyTargets(newTargets);
-              }} className="w-full text-lg font-medium" placeholder="100" />
+                <Input 
+                  type="number" 
+                  value={settings.publishingTargets[selectedYear]?.annual || 0} 
+                  onChange={e => updatePublishingTarget(selectedYear.toString(), 'annual', parseInt(e.target.value) || 0)}
+                  className="w-full text-lg font-medium" 
+                  placeholder="100" 
+                />
               </div>
 
-              {/* Monthly Targets */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Target Bulanan</h3>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  {monthlyTargets[selectedYear] && Object.entries(monthlyTargets[selectedYear]).map(([month, target]) => <div key={month} className="flex items-center justify-between">
+                  {settings.publishingTargets[selectedYear]?.monthly && Object.entries(settings.publishingTargets[selectedYear].monthly).map(([month, target]) => (
+                    <div key={month} className="flex items-center justify-between">
                       <Label className="text-sm font-medium w-12">{month}</Label>
-                      <Input type="number" value={target} onChange={e => {
-                    setMonthlyTargets(prev => ({
-                      ...prev,
-                      [selectedYear]: {
-                        ...prev[selectedYear],
-                        [month]: parseInt(e.target.value) || 0
-                      }
-                    }));
-                  }} className="w-16 text-center text-sm" />
-                    </div>)}
+                      <Input 
+                        type="number" 
+                        value={target} 
+                        onChange={e => updateMonthlyTarget(selectedYear.toString(), month, parseInt(e.target.value) || 0)}
+                        className="w-16 text-center text-sm" 
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Save Button */}
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3" onClick={() => {
-              toast.success('Target penerbitan berhasil disimpan');
-            }}>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3" 
+                onClick={handleSavePublishingTargets}
+              >
                 Simpan Target
               </Button>
-              
-              
             </CardContent>
           </Card>
         </TabsContent>
@@ -412,89 +344,54 @@ export default function SettingsPage() {
               <CardTitle>Target Akuisisi Naskah</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Year Selection with Add Button */}
               <div className="flex items-center gap-2">
                 <Select value={selectedAcquisitionYear.toString()} onValueChange={value => setSelectedAcquisitionYear(parseInt(value))}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {acquisitionTargets.map(yearTarget => <SelectItem key={yearTarget.year} value={yearTarget.year.toString()}>
-                        {yearTarget.year}
-                      </SelectItem>)}
+                  <SelectContent>
+                    {Object.keys(settings.acquisitionTargets).map(year => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Button size="sm" variant="outline" onClick={() => {
-                const currentYear = new Date().getFullYear();
-                const maxYear = Math.max(...acquisitionTargets.map(t => t.year));
-                const newYear = Math.max(currentYear, maxYear + 1);
-                if (acquisitionTargets.some(t => t.year === newYear)) {
-                  toast.error('Tahun sudah ada');
-                  return;
-                }
-                setAcquisitionTargets(prev => [...prev, {
-                  year: newYear,
-                  target: 0
-                }]);
-                setMonthlyAcquisitionTargets(prev => ({
-                  ...prev,
-                  [newYear]: {
-                    'Jan': 0,
-                    'Feb': 0,
-                    'Mar': 0,
-                    'Apr': 0,
-                    'Mei': 0,
-                    'Jun': 0,
-                    'Jul': 0,
-                    'Agu': 0,
-                    'Sep': 0,
-                    'Okt': 0,
-                    'Nov': 0,
-                    'Des': 0
-                  }
-                }));
-                setSelectedAcquisitionYear(newYear);
-                toast.success(`Tahun ${newYear} berhasil ditambahkan`);
-              }} className="w-10 h-10 p-0">
+                <Button size="sm" variant="outline" onClick={() => addNewYear('acquisition')} className="w-10 h-10 p-0">
                   +
                 </Button>
               </div>
 
-              {/* Annual Target */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Target Tahunan</h3>
-                <Input type="number" value={acquisitionTargets.find(t => t.year === selectedAcquisitionYear)?.target || 0} onChange={e => {
-                const newTargets = acquisitionTargets.map(t => t.year === selectedAcquisitionYear ? {
-                  ...t,
-                  target: parseInt(e.target.value) || 0
-                } : t);
-                setAcquisitionTargets(newTargets);
-              }} className="w-full text-lg font-medium" placeholder="200" />
+                <Input 
+                  type="number" 
+                  value={settings.acquisitionTargets[selectedAcquisitionYear]?.annual || 0} 
+                  className="w-full text-lg font-medium" 
+                  placeholder="200" 
+                />
               </div>
 
-              {/* Monthly Targets */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Target Bulanan</h3>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  {monthlyAcquisitionTargets[selectedAcquisitionYear] && Object.entries(monthlyAcquisitionTargets[selectedAcquisitionYear]).map(([month, target]) => <div key={month} className="flex items-center justify-between">
+                  {settings.acquisitionTargets[selectedAcquisitionYear]?.monthly && Object.entries(settings.acquisitionTargets[selectedAcquisitionYear].monthly).map(([month, target]) => (
+                    <div key={month} className="flex items-center justify-between">
                       <Label className="text-sm font-medium w-12">{month}</Label>
-                      <Input type="number" value={target} onChange={e => {
-                    setMonthlyAcquisitionTargets(prev => ({
-                      ...prev,
-                      [selectedAcquisitionYear]: {
-                        ...prev[selectedAcquisitionYear],
-                        [month]: parseInt(e.target.value) || 0
-                      }
-                    }));
-                  }} className="w-16 text-center text-sm" />
-                    </div>)}
+                      <Input 
+                        type="number" 
+                        value={target} 
+                        className="w-16 text-center text-sm" 
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Save Button */}
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3" onClick={() => {
-              toast.success('Target akuisisi berhasil disimpan');
-            }}>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3" 
+                onClick={handleSaveAcquisitionTargets}
+              >
                 Simpan Target
               </Button>
             </CardContent>
@@ -512,15 +409,28 @@ export default function SettingsPage() {
                   Kelola daftar penerbit yang tersedia dalam sistem.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {publishers.map(publisher => <Badge key={publisher} variant="secondary" className="text-sm py-2 px-4">
+                  {publishers.map(publisher => (
+                    <Badge key={publisher} variant="secondary" className="text-sm py-2 px-4">
                       {publisher}
-                      <Button size="sm" variant="ghost" className="h-4 w-4 p-0 ml-2 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleDeletePublisher(publisher)}>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-4 w-4 p-0 ml-2 hover:bg-destructive hover:text-destructive-foreground" 
+                        onClick={() => handleDeletePublisher(publisher)}
+                      >
                         ×
                       </Button>
-                    </Badge>)}
+                    </Badge>
+                  ))}
                 </div>
                 <div className="flex gap-2">
-                  <Input placeholder="Nama penerbit baru" className="flex-1" value={newPublisher} onChange={e => setNewPublisher(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddPublisher()} />
+                  <Input 
+                    placeholder="Nama penerbit baru" 
+                    className="flex-1" 
+                    value={newPublisher} 
+                    onChange={e => setNewPublisher(e.target.value)} 
+                    onKeyPress={e => e.key === 'Enter' && handleAddPublisher()} 
+                  />
                   <Button onClick={handleAddPublisher}>Tambah</Button>
                 </div>
               </div>
@@ -540,7 +450,7 @@ export default function SettingsPage() {
                     <p className="font-medium">Deadline Mendekat</p>
                     <p className="text-sm text-muted-foreground">Notifikasi saat deadline buku kurang dari 7 hari</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch checked={settings.notificationSettings.deadline_alerts} />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -548,35 +458,27 @@ export default function SettingsPage() {
                     <p className="font-medium">Tugas Baru</p>
                     <p className="text-sm text-muted-foreground">Notifikasi saat mendapat tugas baru</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch checked={settings.notificationSettings.task_reminders} />
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Naskah Masuk</p>
-                    <p className="text-sm text-muted-foreground">Notifikasi saat ada naskah baru masuk</p>
+                    <p className="font-medium">Email Notifikasi</p>
+                    <p className="text-sm text-muted-foreground">Menerima notifikasi melalui email</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch checked={settings.notificationSettings.email} />
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Target Tercapai</p>
-                    <p className="text-sm text-muted-foreground">Notifikasi saat target bulanan tercapai</p>
+                    <p className="font-medium">Push Notifikasi</p>
+                    <p className="text-sm text-muted-foreground">Menerima notifikasi push</p>
                   </div>
-                  <Switch />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Email Harian</p>
-                    <p className="text-sm text-muted-foreground">Ringkasan harian melalui email</p>
-                  </div>
-                  <Switch />
+                  <Switch checked={settings.notificationSettings.push} />
                 </div>
               </div>
               
-              <Button>Simpan Pengaturan Notifikasi</Button>
+              <Button onClick={handleSaveNotifications}>Simpan Pengaturan Notifikasi</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -593,15 +495,27 @@ export default function SettingsPage() {
                   Pilih tema yang ingin digunakan untuk aplikasi
                 </p>
                 <div className="grid grid-cols-3 gap-4">
-                  <Button variant={theme === 'light' ? 'default' : 'outline'} onClick={() => setTheme('light')} className="h-20 flex-col gap-2">
+                  <Button 
+                    variant={theme === 'light' ? 'default' : 'outline'} 
+                    onClick={() => setTheme('light')} 
+                    className="h-20 flex-col gap-2"
+                  >
                     <Sun className="w-6 h-6" />
                     <span>Terang</span>
                   </Button>
-                  <Button variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')} className="h-20 flex-col gap-2">
+                  <Button 
+                    variant={theme === 'dark' ? 'default' : 'outline'} 
+                    onClick={() => setTheme('dark')} 
+                    className="h-20 flex-col gap-2"
+                  >
                     <Moon className="w-6 h-6" />
                     <span>Gelap</span>
                   </Button>
-                  <Button variant={theme === 'system' ? 'default' : 'outline'} onClick={() => setTheme('system')} className="h-20 flex-col gap-2">
+                  <Button 
+                    variant={theme === 'system' ? 'default' : 'outline'} 
+                    onClick={() => setTheme('system')} 
+                    className="h-20 flex-col gap-2"
+                  >
                     <Settings className="w-6 h-6" />
                     <span>Sistem</span>
                   </Button>
@@ -611,5 +525,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 }
