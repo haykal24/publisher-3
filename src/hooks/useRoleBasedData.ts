@@ -4,10 +4,11 @@ import { Book, Task, Manuscript } from '@/types';
 
 export function useRoleBasedData() {
   const { profile } = useAuth();
-  const { canViewAllData, userPublisher } = useRoleAccess();
+  const { canViewAllData, userPublisher, isManager } = useRoleAccess();
 
   const filterBooksByRole = (books: Book[]): Book[] => {
-    if (canViewAllData) {
+    // Managers can see ALL books without filtering
+    if (isManager || canViewAllData) {
       return books;
     }
     

@@ -9,6 +9,7 @@ import { BookDetailModal } from '@/components/dashboard/BookDetailModal';
 import { StatusChart } from '@/components/dashboard/StatusChart';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { DeadlineList } from '@/components/dashboard/DeadlineList';
+import { UserDebugPanel } from '@/components/debug/UserDebugPanel';
 import { useAppData } from '@/contexts/AppDataContext';
 import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
 import { Book } from '@/types';
@@ -217,6 +218,9 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Debug Panel - Temporary for testing */}
+      <UserDebugPanel />
 
       <BookDetailModal
         book={selectedBook}

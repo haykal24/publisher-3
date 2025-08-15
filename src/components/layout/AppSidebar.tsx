@@ -64,7 +64,8 @@ export function AppSidebar() {
         : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
-  // Filter menu items based on user role - but Managers see everything
+  // For Manager role: Show ALL menus without any filtering
+  // For other roles: Apply normal filtering
   const filteredMainMenuItems = isManager ? mainMenuItems : mainMenuItems.filter(item => 
     canAccessMenu(item.title)
   );
@@ -73,7 +74,8 @@ export function AppSidebar() {
     canAccessMenu(item.title)
   );
 
-  const shouldShowManagementGroup = filteredManagementMenuItems.length > 0;
+  // Always show management group for managers, or when there are filtered items for other roles
+  const shouldShowManagementGroup = isManager || filteredManagementMenuItems.length > 0;
 
   return (
     <Sidebar className={cn("border-r border-sidebar-border", collapsed ? "w-16" : "w-64")}>
