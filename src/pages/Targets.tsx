@@ -1,6 +1,7 @@
 import { Target, TrendingUp, Calendar } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
+import { AcquisitionChart } from '@/components/dashboard/AcquisitionChart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useMemo } from 'react';
 import { useRealTimeAnalytics } from '@/hooks/useRealTimeAnalytics';
@@ -105,6 +106,8 @@ export default function Targets() {
       </div>
 
       <ProgressChart showLastMonths={12} />
+      
+      <AcquisitionChart />
     </div>
   );
 }
